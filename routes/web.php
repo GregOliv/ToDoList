@@ -2,10 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/login', function () {
-    return 'Ini adalah halaman login sementara'; // Ganti dengan view atau controller yang sebenarnya
-})->name('login'); // **Penting: Memberi nama 'login'**
+// LOGIN
+Route::view('/login', 'login')->name('login');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// REGISTER
+Route::view('/register', 'register');
+
+// DASHBOARD
+Route::view('/dashboard', 'dashboard');
+
+// ADD TASK
+Route::view('/add', 'add');
+
+// ROOT → LOGIN
+Route::redirect('/', '/login');
