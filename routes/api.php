@@ -5,8 +5,8 @@ use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes (No Authentication Needed)
-Route::post('/register', [AuthController::class, 'register'])->name('api.register');
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+Route::post('/auth/register', [AuthController::class, 'register'])->name('api.auth.register');
+Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
 
 // Protected Routes (Authentication Required)
 Route::middleware('auth:sanctum')->group(function () {
