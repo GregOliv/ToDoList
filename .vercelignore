@@ -1,0 +1,8 @@
+.vercelignore
+node_modules
+.env.local
+.env.*.local
+storage/*.key
+vendor
+tests
+.phpunit.result.cache
