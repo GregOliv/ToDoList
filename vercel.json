@@ -5,9 +5,6 @@
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.7.4"
-        },
-        "public/index.php": {
-            "runtime": "vercel-php@0.7.4"
         }
     },
     "routes": [
@@ -17,13 +14,13 @@
         },
         {
             "src": "/(.*)",
-            "dest": "/public/index.php"
+            "dest": "/api/index.php"
         }
     ],
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_URL": "https://to-do-list-gray-mu.vercel.app/",
+        "APP_URL": "https://to-do-list-hdxh4vbzq-greolives-projects.vercel.app/",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
