@@ -101,85 +101,91 @@
     /* 🔐 PROTEKSI LOGIN */
     const token = localStorage.getItem("token");
     if (!token) {
-      window.location.href = "/login";
+        window.location.href = "/login";
     }
 
     /* 🌙 DARK MODE */
     const themeBtn = document.getElementById("themeToggle");
     themeBtn.onclick = () => {
-      document.documentElement.classList.toggle("dark");
-      localStorage.setItem("theme",
-        document.documentElement.classList.contains("dark") ? "dark" : "light");
+        document.documentElement.classList.toggle("dark");
+        localStorage.setItem("theme",
+            document.documentElement.classList.contains("dark") ? "dark" : "light");
     };
     if (localStorage.getItem("theme") === "dark")
-      document.documentElement.classList.add("dark");
+        document.documentElement.classList.add("dark");
 
     /* 📦 STATE MANAGEMENT */
     let tasks = [];
+    let editingTaskId = null; // State untuk menyimpan ID task yang sedang diedit
 
     /* 📡 API CALLS */
     async function fetchTasks() {
-      try {
-        const res = await fetch("/api/tasks", {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/json"
-          }
-        });
+        try {
+            const res = await fetch("/api/tasks", {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json"
+                }
+            });
 
-        if (res.status === 401) {
-          alert("Sesi habis, silakan login kembali");
-          localStorage.clear();
-          window.location.href = "/login";
-          return;
+            if (res.status === 401) {
+                alert("Sesi habis, silakan login kembali");
+                localStorage.clear();
+                window.location.href = "/login";
+                return;
+            }
+
+            tasks = await res.json();
+            renderTasks();
+        } catch (err) {
+            console.error("Gagal mengambil data:", err);
+            // Tambahkan pesan visual jika perlu
         }
-
-        tasks = await res.json();
-        renderTasks();
-      } catch (err) {
-        console.error("Gagal mengambil data:", err);
-      }
     }
 
     async function deleteTask(id) {
-      if (!confirm("Yakin ingin menghapus task ini?")) return;
+        if (!confirm("Yakin ingin menghapus task ini?")) return;
 
-      try {
-        const res = await fetch(`/api/tasks/${id}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        try {
+            const res = await fetch(`/api/tasks/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
 
-        if (res.ok) fetchTasks();
-      } catch (err) {
-        alert("Gagal menghapus task");
-      }
+            if (res.ok) fetchTasks();
+        } catch (err) {
+            alert("Gagal menghapus task");
+        }
     }
 
     async function toggleTask(id) {
-      const task = tasks.find(t => t.id == id);
-      if (!task) return;
+        const task = tasks.find(t => t.id == id);
+        if (!task) return;
 
-      try {
-        // Note: Controller membutuhkan title & description saat update
-        const res = await fetch(`/api/tasks/${id}`, {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            title: task.title,
-            description: task.description || "",
-            completed: !task.completed // Toggle status
-          })
-        });
+        // Tentukan status completed baru
+        const newCompletedStatus = !task.completed;
 
-        if (res.ok) fetchTasks();
-      } catch (err) {
-        alert("Gagal mengupdate status task");
-      }
+        try {
+            const res = await fetch(`/api/tasks/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    title: task.title,
+                    description: task.description || "",
+                    completed: newCompletedStatus, // Mengirim boolean
+                    priority: task.priority, // Tambahkan priority (Wajib untuk validasi controller)
+                    deadline: task.deadline || null // Tambahkan deadline (Wajib untuk validasi controller)
+                })
+            });
+
+            if (res.ok) fetchTasks();
+        } catch (err) {
+            alert("Gagal mengupdate status task");
+        }
     }
 
     /* 🔎 FILTER & ELEMENTS */
@@ -189,80 +195,212 @@
     const sortBy = document.getElementById("sortBy");
     const taskContainer = document.getElementById("taskContainer");
 
+    // --- ELEMENT MODAL ---
+    const editModal = document.getElementById("editModal");
+    const editTitle = document.getElementById("editTitle");
+    const editDescription = document.getElementById("editDescription");
+    const editPriority = document.getElementById("editPriority");
+    const editDeadline = document.getElementById("editDeadline");
+    const btnSaveEdit = document.getElementById("btnSaveEdit");
+
     /* 🎨 RENDER */
     function renderTasks() {
-      let filtered = [...tasks];
+        let filtered = [...tasks];
 
-      // 1. Search
-      const q = searchInput.value.toLowerCase();
-      filtered = filtered.filter(t =>
-        t.title.toLowerCase().includes(q) ||
-        (t.description && t.description.toLowerCase().includes(q))
-      );
+        // Catatan: Ubah value option Priority dan Status di HTML menjadi huruf kecil (low, pending)
+        // Jika tidak diubah, filter di sini harus menggunakan .toLowerCase() atau diubah di HTML
 
-      // 2. Filter Priority (Pastikan field priority ada di database/model task)
-      if (filterPriority.value !== "All")
-        filtered = filtered.filter(t => t.priority === filterPriority.value);
+        // 1. Search
+        const q = searchInput.value.toLowerCase();
+        filtered = filtered.filter(t =>
+            t.title.toLowerCase().includes(q) ||
+            (t.description && t.description.toLowerCase().includes(q))
+        );
 
-      // 3. Filter Status (completed: 1/0 di DB)
-      if (filterStatus.value !== "All") {
-        const isComplete = filterStatus.value === "Completed";
-        filtered = filtered.filter(t => Boolean(t.completed) === isComplete);
-      }
+        // 2. Filter Priority (Disinkronkan dengan huruf kecil)
+        // Catatan: Jika option value di HTML Anda "Low", "Medium", "High", gunakan .toLowerCase()
+        if (filterPriority.value !== "All")
+            // Ubah menjadi .toLowerCase() untuk menyamakan dengan data DB
+            filtered = filtered.filter(t => (t.priority || 'medium').toLowerCase() === filterPriority.value.toLowerCase());
 
-      // 4. Sort
-      if (sortBy.value === "deadline")
-        filtered.sort((a, b) => (a.deadline || "").localeCompare(b.deadline || ""));
-      if (sortBy.value === "priority") {
-        const pVal = { High: 1, Medium: 2, Low: 3 };
-        filtered.sort((a, b) => (pVal[a.priority] || 99) - (pVal[b.priority] || 99));
-      }
-      if (sortBy.value === "az")
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-      if (sortBy.value === "za")
-        filtered.sort((a, b) => b.title.localeCompare(a.title));
+        // 3. Filter Status (completed: 1/0 di DB)
+        if (filterStatus.value !== "All") {
+            // Ubah ke lowercase
+            const isComplete = filterStatus.value.toLowerCase() === "completed";
+            filtered = filtered.filter(t => Boolean(t.completed) === isComplete);
+        }
 
-      // Render HTML
-      taskContainer.innerHTML = "";
+        // 4. Sort
+        if (sortBy.value === "deadline") {
+            // Urutkan deadline (yang null di akhir)
+            filtered.sort((a, b) => {
+                const dateA = a.deadline ? new Date(a.deadline) : new Date(8640000000000000); // Max Date
+                const dateB = b.deadline ? new Date(b.deadline) : new Date(8640000000000000); // Max Date
+                return dateA - dateB;
+            });
+        }
+        if (sortBy.value === "priority") {
+            // Gunakan huruf kecil karena DB menggunakan huruf kecil
+            const pVal = { high: 1, medium: 2, low: 3 }; 
+            filtered.sort((a, b) => (pVal[a.priority.toLowerCase()] || 99) - (pVal[b.priority.toLowerCase()] || 99));
+        }
+        if (sortBy.value === "az")
+            filtered.sort((a, b) => a.title.localeCompare(b.title));
+        if (sortBy.value === "za")
+            filtered.sort((a, b) => b.title.localeCompare(a.title));
 
-      if (!filtered.length) {
-        taskContainer.innerHTML = `<p class="text-center text-gray-500">No tasks found</p>`;
-        return;
-      }
+        // Render HTML
+        taskContainer.innerHTML = "";
 
-      filtered.forEach(t => {
-        // Handle null values
-        const desc = t.description || "-";
-        const deadline = t.deadline || "-";
-        const isDone = Boolean(t.completed); // Pastikan boolean proper
+        if (!filtered.length) {
+            taskContainer.innerHTML = `<p class="text-center text-gray-500">No tasks found</p>`;
+            return;
+        }
 
-        taskContainer.innerHTML += `
-    <div class="bg-white dark:bg-gray-800 p-4 rounded shadow flex justify-between items-start transition hover:shadow-md">
-      <div>
-        <h3 class="font-bold text-lg ${isDone ? 'line-through text-gray-400' : 'text-gray-800 dark:text-gray-200'}">
-          ${t.title}
-        </h3>
-        <p class="text-sm text-gray-500 mb-1">${desc}</p>
-        <div class="flex gap-2 text-xs">
-           <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">📅 ${deadline}</span>
-           <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
-             ${t.priority || 'Normal'}
-           </span>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <input type="checkbox" 
-          class="w-5 h-5 rounded cursor-pointer" 
-          ${isDone ? 'checked' : ''} 
-          onchange="toggleTask(${t.id})">
-          
-        <button onclick="deleteTask(${t.id})" 
-          class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 p-2 rounded transition">
-          🗑️
-        </button>
-      </div>
-    </div>`;
-      });
+        filtered.forEach(t => {
+            const desc = t.description || "-";
+            const deadline = t.deadline || "-";
+            const isDone = Boolean(t.completed);
+            
+            // Tentukan warna prioritas
+            let priorityClass = '';
+            switch (t.priority.toLowerCase()) {
+                case 'high':
+                    priorityClass = 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+                    break;
+                case 'medium':
+                    priorityClass = 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200';
+                    break;
+                case 'low':
+                    priorityClass = 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
+                    break;
+                default:
+                    priorityClass = 'bg-gray-100 dark:bg-gray-700';
+            }
+
+
+            taskContainer.innerHTML += `
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow flex justify-between items-start transition hover:shadow-md">
+          <div>
+            <h3 class="font-bold text-lg ${isDone ? 'line-through text-gray-400' : 'text-gray-800 dark:text-gray-200'}">
+              ${t.title}
+            </h3>
+            <p class="text-sm text-gray-500 mb-1">${desc}</p>
+            <div class="flex gap-2 text-xs">
+               <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">📅 ${deadline}</span>
+               <span class="${priorityClass} px-2 py-0.5 rounded">
+                 ${t.priority || 'Normal'}
+               </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="openEditModal(${t.id})" 
+               class="text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/30 p-2 rounded transition">
+              📝
+            </button>
+            <input type="checkbox" 
+              class="w-5 h-5 rounded cursor-pointer" 
+              ${isDone ? 'checked' : ''} 
+              onchange="toggleTask(${t.id})">
+              
+            <button onclick="deleteTask(${t.id})" 
+              class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 p-2 rounded transition">
+              🗑️
+            </button>
+          </div>
+        </div>`;
+        });
+    }
+
+    /* 📝 EDIT MODAL LOGIC */
+    function openEditModal(id) {
+        const task = tasks.find(t => t.id == id);
+        if (!task) return;
+
+        editingTaskId = id;
+        
+        // Mengisi modal dengan data tugas
+        editTitle.value = task.title;
+        editDescription.value = task.description || '';
+        
+        // Pastikan nilai di modal (HTML) menggunakan huruf kapital (Low, Medium, High)
+        // atau ubah nilainya menjadi huruf kecil. Untuk amannya, kita set toUpperCase() 
+        // karena option value di HTML modal Anda saat ini adalah "Low", "Medium", "High"
+        const priorityToSet = task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1).toLowerCase() : 'Medium';
+        editPriority.value = priorityToSet;
+        
+        editDeadline.value = task.deadline || '';
+
+        editModal.classList.remove('hidden');
+    }
+
+    async function saveEdit() {
+        if (!editingTaskId) return;
+
+        const updatedTask = tasks.find(t => t.id == editingTaskId);
+        if (!updatedTask) return;
+
+        // Mendapatkan nilai baru dari modal
+        const newTitle = editTitle.value.trim();
+        const newDescription = editDescription.value.trim();
+        const newPriority = editPriority.value; // Nilai dari modal (misal: "Medium")
+        const newDeadline = editDeadline.value;
+
+        if (!newTitle) {
+            alert("Title tidak boleh kosong.");
+            return;
+        }
+
+        btnSaveEdit.disabled = true;
+        btnSaveEdit.textContent = "Saving...";
+
+        try {
+            const res = await fetch(`/api/tasks/${editingTaskId}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    title: newTitle,
+                    description: newDescription,
+                    // PENTING: Kirim priority dengan huruf kecil untuk match validasi controller
+                    priority: newPriority.toLowerCase(), 
+                    deadline: newDeadline || null,
+                    // Karena ini PUT (update), kita harus kirim status completed juga
+                    completed: updatedTask.completed,
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                 // Tampilkan error validasi dari server
+                let errorMessage = "Gagal menyimpan task";
+                if (data.errors) {
+                   errorMessage = Object.values(data.errors)[0][0];
+                } else if (data.message) {
+                   errorMessage = data.message;
+                }
+                throw new Error(errorMessage);
+            }
+
+            // Sukses
+            closeEditModal();
+            fetchTasks(); 
+
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            btnSaveEdit.disabled = false;
+            btnSaveEdit.textContent = "Save";
+        }
+    }
+
+    function closeEditModal() {
+        editingTaskId = null;
+        editModal.classList.add('hidden');
     }
 
     /* EVENTS */
@@ -271,23 +409,33 @@
     filterStatus.onchange = renderTasks;
     sortBy.onchange = renderTasks;
 
+    // EVENT MODAL
+    document.getElementById("btnCancelEdit").onclick = closeEditModal;
+    btnSaveEdit.onclick = saveEdit;
+    
+    // Global functions (agar bisa dipanggil dari onchange/onclick di HTML)
+    window.toggleTask = toggleTask;
+    window.deleteTask = deleteTask;
+    window.openEditModal = openEditModal;
+
+
     /* 🚪 LOGOUT */
     document.getElementById("logoutBtn").onclick = async () => {
-      try {
-        await fetch("/api/logout", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-      } catch (e) { console.log("Logout error", e); } // Ignore error logic, force logout local
+        try {
+            await fetch("/api/logout", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+        } catch (e) { console.log("Logout error", e); } 
 
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
     };
 
     /* 🚀 START */
     fetchTasks();
-  </script>
+</script>
 
 </body>
 
