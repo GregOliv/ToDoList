@@ -13,6 +13,8 @@ Route::get('/dashboard', fn() => view('dashboard'))->name('web.dashboard');
 
 // ADD TASK
 Route::get('/add-task', fn() => view('add'))->name('web.add');
+Route::post('/add-task', function (Request $request) {
+    return 'Add Task diproses'; })->name('web.add.post');
 
 // ROOT → LOGIN
 Route::redirect('/', '/login');
