@@ -44,11 +44,10 @@
       <textarea id="description" class="w-full border p-2 rounded mb-4 dark:bg-gray-700 dark:border-gray-600"
         placeholder="Deskripsi (opsional)"></textarea>
 
-      <label class="block mb-2 font-semibold">Priority</label>
       <select id="priority" class="w-full border p-2 rounded mb-4 dark:bg-gray-700 dark:border-gray-600">
-        <option value="Low">Low</option>
-        <option value="Medium">Medium</option>
-        <option value="High">High</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
       </select>
 
       <label class="block mb-2 font-semibold">Deadline *</label>
