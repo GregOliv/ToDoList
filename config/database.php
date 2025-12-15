@@ -58,6 +58,10 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'require', // Enforce SSL for Neon
+            'options' => [
+        // This tells PDO to emulate prepared statements, solving the PostgreSQL/migrations issue.
+        \PDO::ATTR_EMULATE_PREPARES => true,
+    ],
         ],
 
         'sqlsrv' => [
