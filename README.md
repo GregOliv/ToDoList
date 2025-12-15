@@ -231,10 +231,9 @@ This project is open-sourced software licensed under the [MIT license](https://o
 
 ## 👨‍💻 Author
 
-**Gregorius Oliver** </br>
 **Gregorius Oliver Rachmadi** </br>
-**Darren Nathanael**
-**Kenny William**
+**Darren Nathanael**</br>
+**Kenny William**</br>
 
 ## 🙏 Acknowledgments
 
