@@ -3,16 +3,16 @@
 use Illuminate\Support\Facades\Route;
 
 // LOGIN
-Route::view('/login', 'login')->name('login');
+Route::get('/login', fn() => view('login'))->name('web.login');
 
 // REGISTER
-Route::view('/register', 'register');
+Route::get('/register', fn() => view('register'))->name('web.register');
 
 // DASHBOARD
-Route::view('/dashboard', 'dashboard');
+Route::get('/dashboard', fn() => view('dashboard'))->name('web.dashboard');
 
 // ADD TASK
-Route::view('/add', 'add');
+Route::get('/add-task', fn() => view('add'))->name('web.add');
 
 // ROOT → LOGIN
 Route::redirect('/', '/login');
