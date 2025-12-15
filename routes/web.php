@@ -12,7 +12,7 @@ Route::view('/register', 'register');
 Route::view('/dashboard', 'dashboard');
 
 // ADD TASK
-Route::view('/add', 'add');
+Route::view('/add-task', 'add');
 
 // ROOT → LOGIN
 Route::redirect('/', '/login');

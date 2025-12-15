@@ -22,14 +22,15 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        // TODO: Tambahkan validasi input
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'priority' => 'nullable|string|in:Low,Medium,High',
+            'deadline' => 'nullable|date',
         ]);
-        
+
         $task = $request->user()->tasks()->create($validated);
-        
+
         return response()->json($task, 201); // 201 Created
     }
 
@@ -43,15 +44,16 @@ class TaskController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // TODO: Tambahkan validasi input
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'completed' => 'required|boolean',
+            'priority' => 'nullable|string|in:Low,Medium,High',
+            'deadline' => 'nullable|date',
         ]);
 
         $task->update($validated);
-        
+
         return response()->json($task);
     }
 
@@ -64,9 +66,9 @@ class TaskController extends Controller
         if ($request->user()->id !== $task->user_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        
+
         $task->delete();
-        
+
         return response()->json(['message' => 'Task deleted'], 200);
     }
 }
