@@ -369,7 +369,7 @@
                     priority: newPriority.toLowerCase(), 
                     deadline: newDeadline || null,
                     // Karena ini PUT (update), kita harus kirim status completed juga
-                    completed: updatedTask.completed,
+                    completed: Boolean(updatedTask.completed),
                 })
             });
 
