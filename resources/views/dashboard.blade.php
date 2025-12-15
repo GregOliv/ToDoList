@@ -97,7 +97,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     /* 🔐 PROTEKSI LOGIN */
     const token = localStorage.getItem("token");
     if (!token) {
@@ -116,9 +116,43 @@
 
     /* 📦 STATE MANAGEMENT */
     let tasks = [];
-    let editingTaskId = null; // State untuk menyimpan ID task yang sedang diedit
+    let editingTaskId = null;
 
-    /* 📡 API CALLS */
+    // =======================================================
+    // 💡 FUNGSI PEMBANTU DEADLINE
+    // =======================================================
+    function formatDeadlineStatus(deadline, isCompleted) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (!deadline) {
+            return { text: 'No Deadline', class: 'bg-gray-100 dark:bg-gray-700 text-gray-500' };
+        }
+        
+        // Jika sudah selesai, abaikan status deadline
+        if (isCompleted) {
+             return { text: 'Completed', class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' };
+        }
+
+        const deadlineDate = new Date(deadline);
+        deadlineDate.setHours(0, 0, 0, 0);
+        
+        const diffTime = deadlineDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            const daysOverdue = Math.abs(diffDays);
+            return { text: `Overdue (${daysOverdue} days)`, class: 'bg-red-500 text-white' };
+        } else if (diffDays === 0) {
+            return { text: 'Due Today', class: 'bg-yellow-500 text-white' };
+        } else if (diffDays <= 3) {
+            return { text: `${diffDays} days left`, class: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200' };
+        } else {
+            return { text: `${diffDays} days left`, class: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200' };
+        }
+    }
+
+    /* 📡 API CALLS (tidak berubah) */
     async function fetchTasks() {
         try {
             const res = await fetch("/api/tasks", {
@@ -139,7 +173,6 @@
             renderTasks();
         } catch (err) {
             console.error("Gagal mengambil data:", err);
-            // Tambahkan pesan visual jika perlu
         }
     }
 
@@ -162,7 +195,6 @@
         const task = tasks.find(t => t.id == id);
         if (!task) return;
 
-        // Tentukan status completed baru
         const newCompletedStatus = !task.completed;
 
         try {
@@ -176,9 +208,9 @@
                 body: JSON.stringify({
                     title: task.title,
                     description: task.description || "",
-                    completed: newCompletedStatus, // Mengirim boolean
-                    priority: task.priority, // Tambahkan priority (Wajib untuk validasi controller)
-                    deadline: task.deadline || null // Tambahkan deadline (Wajib untuk validasi controller)
+                    completed: newCompletedStatus,
+                    priority: task.priority,
+                    deadline: task.deadline || null
                 })
             });
 
@@ -203,12 +235,9 @@
     const editDeadline = document.getElementById("editDeadline");
     const btnSaveEdit = document.getElementById("btnSaveEdit");
 
-    /* 🎨 RENDER */
+    /* 🎨 RENDER (Diperbarui) */
     function renderTasks() {
         let filtered = [...tasks];
-
-        // Catatan: Ubah value option Priority dan Status di HTML menjadi huruf kecil (low, pending)
-        // Jika tidak diubah, filter di sini harus menggunakan .toLowerCase() atau diubah di HTML
 
         // 1. Search
         const q = searchInput.value.toLowerCase();
@@ -217,30 +246,25 @@
             (t.description && t.description.toLowerCase().includes(q))
         );
 
-        // 2. Filter Priority (Disinkronkan dengan huruf kecil)
-        // Catatan: Jika option value di HTML Anda "Low", "Medium", "High", gunakan .toLowerCase()
+        // 2. Filter Priority
         if (filterPriority.value !== "All")
-            // Ubah menjadi .toLowerCase() untuk menyamakan dengan data DB
             filtered = filtered.filter(t => (t.priority || 'medium').toLowerCase() === filterPriority.value.toLowerCase());
 
-        // 3. Filter Status (completed: 1/0 di DB)
+        // 3. Filter Status
         if (filterStatus.value !== "All") {
-            // Ubah ke lowercase
             const isComplete = filterStatus.value.toLowerCase() === "completed";
             filtered = filtered.filter(t => Boolean(t.completed) === isComplete);
         }
 
         // 4. Sort
         if (sortBy.value === "deadline") {
-            // Urutkan deadline (yang null di akhir)
             filtered.sort((a, b) => {
-                const dateA = a.deadline ? new Date(a.deadline) : new Date(8640000000000000); // Max Date
-                const dateB = b.deadline ? new Date(b.deadline) : new Date(8640000000000000); // Max Date
+                const dateA = a.deadline ? new Date(a.deadline) : new Date(8640000000000000);
+                const dateB = b.deadline ? new Date(b.deadline) : new Date(8640000000000000);
                 return dateA - dateB;
             });
         }
         if (sortBy.value === "priority") {
-            // Gunakan huruf kecil karena DB menggunakan huruf kecil
             const pVal = { high: 1, medium: 2, low: 3 }; 
             filtered.sort((a, b) => (pVal[a.priority.toLowerCase()] || 99) - (pVal[b.priority.toLowerCase()] || 99));
         }
@@ -264,7 +288,7 @@
             
             // Tentukan warna prioritas
             let priorityClass = '';
-            switch (t.priority.toLowerCase()) {
+            switch ((t.priority || '').toLowerCase()) {
                 case 'high':
                     priorityClass = 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
                     break;
@@ -277,6 +301,9 @@
                 default:
                     priorityClass = 'bg-gray-100 dark:bg-gray-700';
             }
+            
+            // Panggil fungsi status deadline yang baru
+            const deadlineStatus = formatDeadlineStatus(t.deadline, isDone);
 
 
             taskContainer.innerHTML += `
@@ -287,7 +314,7 @@
             </h3>
             <p class="text-sm text-gray-500 mb-1">${desc}</p>
             <div class="flex gap-2 text-xs">
-               <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">📅 ${deadline}</span>
+               <span class="${deadlineStatus.class} px-2 py-0.5 rounded font-medium">📅 ${deadlineStatus.text}</span>
                <span class="${priorityClass} px-2 py-0.5 rounded">
                  ${t.priority || 'Normal'}
                </span>
@@ -312,20 +339,16 @@
         });
     }
 
-    /* 📝 EDIT MODAL LOGIC */
+    /* 📝 EDIT MODAL LOGIC (Tidak Berubah) */
     function openEditModal(id) {
         const task = tasks.find(t => t.id == id);
         if (!task) return;
 
         editingTaskId = id;
         
-        // Mengisi modal dengan data tugas
         editTitle.value = task.title;
         editDescription.value = task.description || '';
         
-        // Pastikan nilai di modal (HTML) menggunakan huruf kapital (Low, Medium, High)
-        // atau ubah nilainya menjadi huruf kecil. Untuk amannya, kita set toUpperCase() 
-        // karena option value di HTML modal Anda saat ini adalah "Low", "Medium", "High"
         const priorityToSet = task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1).toLowerCase() : 'Medium';
         editPriority.value = priorityToSet;
         
@@ -340,10 +363,9 @@
         const updatedTask = tasks.find(t => t.id == editingTaskId);
         if (!updatedTask) return;
 
-        // Mendapatkan nilai baru dari modal
         const newTitle = editTitle.value.trim();
         const newDescription = editDescription.value.trim();
-        const newPriority = editPriority.value; // Nilai dari modal (misal: "Medium")
+        const newPriority = editPriority.value;
         const newDeadline = editDeadline.value;
 
         if (!newTitle) {
@@ -365,10 +387,8 @@
                 body: JSON.stringify({
                     title: newTitle,
                     description: newDescription,
-                    // PENTING: Kirim priority dengan huruf kecil untuk match validasi controller
                     priority: newPriority.toLowerCase(), 
                     deadline: newDeadline || null,
-                    // Karena ini PUT (update), kita harus kirim status completed juga
                     completed: Boolean(updatedTask.completed),
                 })
             });
@@ -376,8 +396,7 @@
             const data = await res.json();
 
             if (!res.ok) {
-                 // Tampilkan error validasi dari server
-                let errorMessage = "Gagal menyimpan task";
+                 let errorMessage = "Gagal menyimpan task";
                 if (data.errors) {
                    errorMessage = Object.values(data.errors)[0][0];
                 } else if (data.message) {
@@ -386,7 +405,6 @@
                 throw new Error(errorMessage);
             }
 
-            // Sukses
             closeEditModal();
             fetchTasks(); 
 
