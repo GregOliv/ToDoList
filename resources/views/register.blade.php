@@ -86,13 +86,11 @@
 
       try {
         // Call API Register
-        const response = await fetch("/register", {
+        const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-CSRF-TOKEN": "{{ csrf_token() }}"
           },
           body: JSON.stringify({
             name: username,

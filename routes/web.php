@@ -8,7 +8,6 @@ Route::get('/login', fn() => view('login'))->name('web.login');
 
 // REGISTER
 Route::get('/register', fn() => view('register'))->name('web.register');
-Route::post('/register', [AuthController::class, 'register'])->name('web.register.post');
 
 // DASHBOARD
 Route::get('/dashboard', fn() => view('dashboard'))->name('web.dashboard');
