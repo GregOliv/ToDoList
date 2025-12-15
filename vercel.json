@@ -1,7 +1,10 @@
 {
     "version": 2,
     "framework": null,
+<<<<<<< HEAD
     "outputDirectory": "public",
+=======
+>>>>>>> c8a843b41b78ee053fd6f2b8c448bc9926b551e2
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.6.0"
