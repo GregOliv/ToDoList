@@ -11,7 +11,14 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'completed', 'user_id'];
+    protected $fillable = [
+        'title',
+        'description',
+        'completed',
+        'user_id',
+        'priority',
+        'deadline'
+    ];
 
     // Tambahkan relasi ke User (opsional, tapi disarankan)
     public function user()
