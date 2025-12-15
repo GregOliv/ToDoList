@@ -34,8 +34,11 @@
       <input id="confirmPassword" type="password" class="w-full border rounded-md p-2 mb-4"
         placeholder="Ulangi password" />
 
-      <!-- BUTTON -->
-      <button id="btnRegister" class="w-full bg-green-600 text-white p-2 rounded-md hover:bg-green-700">
+      <!-- BUTTON (PERUBAHAN 1) -->
+      <button
+        id="btnRegister"
+        type="button"
+        class="w-full bg-green-600 text-white p-2 rounded-md hover:bg-green-700">
         Create Account
       </button>
 
@@ -50,7 +53,10 @@
     const btnRegister = document.getElementById("btnRegister");
     const err = document.getElementById("error");
 
-    btnRegister.addEventListener("click", async () => {
+    // PERUBAHAN 2: Tambahkan prevent default
+    btnRegister.addEventListener("click", async (e) => {
+      e.preventDefault(); // Penting untuk serverless/Vercel
+
       const username = document.getElementById("username").value.trim();
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
