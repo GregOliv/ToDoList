@@ -190,10 +190,10 @@
 
         // Tentukan status completed baru
         const newCompletedStatus = !task.completed;
-        
-        // PENTING: Lakukan perubahan status visual langsung (Optimistic UI)
-        task.completed = newCompletedStatus;
-        renderTasks(); // Render ulang untuk menampilkan perubahan
+        
+        // PENTING: Lakukan perubahan status visual langsung (Optimistic UI)
+        task.completed = newCompletedStatus;
+        renderTasks(); // Render ulang untuk menampilkan perubahan
 
         try {
             const res = await fetch(`/api/tasks/${id}`, {
@@ -213,14 +213,14 @@
             });
 
             if (!res.ok) {
-                // Jika gagal di server, kembalikan status di UI
-                task.completed = !newCompletedStatus; 
-                renderTasks();
-                throw new Error("Gagal mengupdate status task di server.");
-            }
-            
-            // Jika sukses, fetchTasks akan dipanggil di akhir proses saveEdit/toggleTask
-            // fetchTasks(); // Dihapus karena sudah ada renderTasks() optimistic
+                // Jika gagal di server, kembalikan status di UI
+                task.completed = !newCompletedStatus; 
+                renderTasks();
+                throw new Error("Gagal mengupdate status task di server.");
+            }
+            
+            // Jika sukses, fetchTasks akan dipanggil di akhir proses saveEdit/toggleTask
+            // fetchTasks(); // Dihapus karena sudah ada renderTasks() optimistic
 
         } catch (err) {
             alert("Error: " + err.message);
@@ -311,12 +311,12 @@
             }
             
             const deadlineStatus = formatDeadlineStatus(t.deadline, isDone);
-            
-            // Tentukan style tombol Completed/Pending
-            const completeBtnText = isDone ? 'Mark as Pending' : 'Mark as Complete';
-            const completeBtnClass = isDone 
-                ? 'bg-orange-500 hover:bg-orange-600 text-white' // Orange jika ingin dikembalikan ke Pending
-                : 'bg-green-600 hover:bg-green-700 text-white'; // Hijau jika ingin diselesaikan
+            
+            // Tentukan style tombol Completed/Pending
+            const completeBtnText = isDone ? 'Mark as Pending' : 'Mark as Complete';
+            const completeBtnClass = isDone 
+                ? 'bg-orange-500 hover:bg-orange-600 text-white' // Orange jika ingin dikembalikan ke Pending
+                : 'bg-green-600 hover:bg-green-700 text-white'; // Hijau jika ingin diselesaikan
 
             taskContainer.innerHTML += `
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow flex justify-between items-start transition hover:shadow-md">
@@ -333,23 +333,23 @@
             </div>
           </div>
           
-          <div class="flex flex-col items-end gap-2 ml-4">
-                <button onclick="toggleTask(${t.id})" 
-                    class="px-3 py-1 text-sm rounded transition ${completeBtnClass}">
-                    ${completeBtnText}
-                </button>
-                <div class="flex gap-2">
-                    <button onclick="openEditModal(${t.id})" 
-                        class="text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/30 p-2 rounded transition">
-                        📝
-                    </button>
-                    <button onclick="deleteTask(${t.id})" 
-                        class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 p-2 rounded transition">
-                        🗑️
-                    </button>
-                </div>
+                    <div class="flex flex-col items-end gap-1 ml-4">
+                <button onclick="toggleTask(${t.id})" 
+                    class="px-3 py-1 text-sm rounded transition ${completeBtnClass}">
+                    ${completeBtnText}
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="openEditModal(${t.id})" 
+                        class="text-blue-500 hover:text-blue-700 dark:bg-gray-700 dark:hover:bg-gray-600 p-1.5 rounded transition">
+                        📝
+                    </button>
+                    <button onclick="deleteTask(${t.id})" 
+                        class="text-red-500 hover:text-red-700 dark:bg-gray-700 dark:hover:bg-gray-600 p-1.5 rounded transition">
+                        🗑️
+                    </button>
+                </div>
           </div>
-        </div>`;
+                  </div>`;
         });
     }
 
