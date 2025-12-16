@@ -25,6 +25,12 @@
 
     <div class="flex items-center gap-4">
 
+      <!-- CLOCK -->
+      <div id="realtimeClock"
+        class="hidden md:block text-sm font-mono bg-white/10 px-3 py-1 rounded-full border border-white/10 shadow-sm backdrop-blur-sm">
+        --:--:--
+      </div>
+
       <!-- DARK MODE -->
       <button id="themeToggle" class="p-2 rounded-full hover:bg-white/20 transition-all duration-300"
         title="Toggle Theme">
@@ -188,6 +194,15 @@
     if (!token) {
       window.location.href = "/login";
     }
+
+    /* ⏰ REALTIME CLOCK */
+    function updateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('en-GB', { hour12: false }); // HH:MM:SS
+      document.getElementById('realtimeClock').textContent = timeString;
+    }
+    setInterval(updateTime, 1000);
+    updateTime(); // init immediately
 
     /* 🌙 DARK MODE & CHART THEME */
     const themeBtn = document.getElementById("themeToggle");
@@ -395,7 +410,6 @@
 
       const newCompletedStatus = !task.completed;
 
-      // Optimistic UI Update (optional, but let's stick to fetch refetch for safety)
       try {
         const res = await fetch(`/api/tasks/${id}`, {
           method: "PUT",
@@ -408,13 +422,23 @@
             title: task.title,
             description: task.description || "",
             completed: newCompletedStatus,
-            priority: task.priority,
-            deadline: task.deadline || null
+            // Perbaiki: kirim priority dalam lowercase agar sesuai format backend
+            priority: (task.priority || 'medium').toLowerCase(),
+            // Perbaiki: pastikan deadline dikirim null jika kosong, bukan empty string
+            deadline: task.deadline ? task.deadline : null
           })
         });
 
-        if (res.ok) fetchTasks();
+        const data = await res.json();
+
+        if (res.ok) {
+          fetchTasks();
+        } else {
+          console.error('Update failed:', data);
+          alert("Gagal update task: " + (data.message || 'Error tidak diketahui'));
+        }
       } catch (err) {
+        console.error(err);
         alert("Gagal mengupdate status task");
       }
     }
