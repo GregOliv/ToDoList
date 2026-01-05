@@ -21,6 +21,8 @@ class Task extends Model
         'category_id'
     ];
 
+    protected $appends = ['completed'];
+
     /**
      * Relationship to Category.
      */

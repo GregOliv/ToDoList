@@ -62,7 +62,7 @@
       <!-- CATEGORIES -->
       <button id="manageCategoriesBtn"
         class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full hover:bg-white/20 transition-all font-medium text-sm">
-         Categories
+        Categories
       </button>
 
 
@@ -567,10 +567,22 @@
     }
 
     async function toggleTask(id) {
-      const task = tasks.find(t => t.id == id);
-      if (!task) return;
+      const taskIndex = tasks.findIndex(t => t.id == id);
+      if (taskIndex === -1) return;
 
-      const newCompletedStatus = !task.completed;
+      const task = tasks[taskIndex];
+      // Use both completed and status as a fallback for robustness
+      const isCurrentlyDone = Boolean(task.completed || task.status === 'completed');
+      const newStatus = !isCurrentlyDone;
+
+      // --- OPTIMISTIC UPDATE ---
+      // Temporarily update local state for instant feedback
+      const originalValue = task.completed;
+      const originalStatus = task.status;
+      tasks[taskIndex].completed = newStatus;
+      tasks[taskIndex].status = newStatus ? 'completed' : 'pending';
+      renderTasks();
+      renderStats();
 
       try {
         const res = await fetch(`/api/tasks/${id}`, {
@@ -583,24 +595,30 @@
           body: JSON.stringify({
             title: task.title,
             description: task.description || "",
-            completed: newCompletedStatus,
-            // Perbaiki: kirim priority dalam lowercase agar sesuai format backend
+            completed: newStatus,
             priority: (task.priority || 'medium').toLowerCase(),
-            // Perbaiki: pastikan deadline dikirim null jika kosong, bukan empty string
-            deadline: task.deadline ? task.deadline : null
+            deadline: task.deadline ? task.deadline : null,
+            category_id: task.category_id || null
           })
         });
 
-        const data = await res.json();
-
-        if (res.ok) {
-          fetchTasks();
-        } else {
-          console.error('Update failed:', data);
-          alert("Gagal update task: " + (data.message || 'Error tidak diketahui'));
+        if (!res.ok) {
+          throw new Error("Gagal update server");
         }
+
+        // Refresh with real data from server
+        const updatedTask = await res.json();
+        tasks[taskIndex] = updatedTask;
+        renderTasks();
+        renderStats();
+
       } catch (err) {
         console.error(err);
+        // ROLLBACK on error
+        tasks[taskIndex].completed = originalValue;
+        tasks[taskIndex].status = originalStatus;
+        renderTasks();
+        renderStats();
         alert("Gagal mengupdate status task");
       }
     }
@@ -695,7 +713,8 @@
       filtered.forEach(t => {
         const desc = t.description || "-";
         const deadline = t.deadline || null;
-        const isDone = Boolean(t.completed);
+        // Use both as fallback
+        const isDone = Boolean(t.completed || t.status === 'completed');
         const categoryName = t.category ? t.category.name : null;
         const categoryColor = t.category ? t.category.color : '#94a3b8';
 
