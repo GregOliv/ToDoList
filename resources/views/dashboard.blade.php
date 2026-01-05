@@ -750,6 +750,23 @@
       if (isCompleted) {
         return { text: 'Completed', class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' };
       }
+
+      const deadlineDate = new Date(deadline);
+      deadlineDate.setHours(0, 0, 0, 0);
+
+      const diffTime = deadlineDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        const daysOverdue = Math.abs(diffDays);
+        return { text: `Overdue ${daysOverdue}d`, class: 'bg-red-500 text-white shadow-md shadow-red-500/30' };
+      } else if (diffDays === 0) {
+        return { text: 'Due Today', class: 'bg-amber-500 text-white shadow-md shadow-amber-500/30' };
+      } else if (diffDays <= 3) {
+        return { text: `${diffDays} days left`, class: 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200' };
+      } else {
+        return { text: `${diffDays} days left`, class: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200' };
+      }
     }
 
     // Initialize deadline min dates
@@ -759,24 +776,6 @@
       if (editDeadlineInput) editDeadlineInput.min = todayStr;
     }
     initDeadlineConstraints();
-
-    const deadlineDate = new Date(deadline);
-    deadlineDate.setHours(0, 0, 0, 0);
-
-    const diffTime = deadlineDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) {
-      const daysOverdue = Math.abs(diffDays);
-      return { text: `Overdue ${daysOverdue}d`, class: 'bg-red-500 text-white shadow-md shadow-red-500/30' };
-    } else if (diffDays === 0) {
-      return { text: 'Due Today', class: 'bg-amber-500 text-white shadow-md shadow-amber-500/30' };
-    } else if (diffDays <= 3) {
-      return { text: `${diffDays} days left`, class: 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200' };
-    } else {
-      return { text: `${diffDays} days left`, class: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200' };
-    }
-    }
 
     /* 📡 API CALLS */
     async function fetchTasks() {
