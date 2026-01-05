@@ -414,7 +414,7 @@
       const name = nameInput.value.trim();
       const color = colorInput.value;
 
-      if (!name) return alert("Category name is required");
+      if (!name) return showNotification("Category name is required", "error");
 
       try {
         const res = await fetch("/api/categories", {
@@ -432,7 +432,7 @@
           fetchCategories();
         }
       } catch (err) {
-        alert("Failed to add category");
+        showNotification("Failed to add category", "error");
       }
     }
 
@@ -450,7 +450,7 @@
           fetchTasks(); // Refresh tasks to update badges
         }
       } catch (err) {
-        alert("Failed to delete category");
+        showNotification("Failed to delete category", "error");
       }
     }
 
@@ -495,7 +495,7 @@
       const name = document.getElementById("profileName").value.trim();
       const email = document.getElementById("profileEmail").value.trim();
 
-      if (!name || !email) return alert("Name and Email are required");
+      if (!name || !email) return showNotification("Name and Email are required", "error");
 
       try {
         const res = await fetch("/api/profile", {
@@ -510,12 +510,12 @@
         const data = await res.json();
         if (res.ok) {
           localStorage.setItem("user", JSON.stringify(data.user));
-          alert("Profile updated!");
+          showNotification("Profile updated!");
         } else {
-          alert(data.message || "Failed to update profile");
+          showNotification(data.message || "Failed to update profile", "error");
         }
       } catch (err) {
-        alert("Error updating profile");
+        showNotification("Error updating profile", "error");
       }
     }
 
@@ -524,8 +524,8 @@
       const password = document.getElementById("newPassword").value;
       const password_confirmation = document.getElementById("confirmPassword").value;
 
-      if (!current_password || !password) return alert("Both current and new password are required");
-      if (password !== password_confirmation) return alert("Passwords do not match");
+      if (!current_password || !password) return showNotification("Both current and new password are required", "error");
+      if (password !== password_confirmation) return showNotification("Passwords do not match", "error");
 
       try {
         const res = await fetch("/api/profile/password", {
@@ -539,15 +539,15 @@
         });
         const data = await res.json();
         if (res.ok) {
-          alert("Password updated!");
+          showNotification("Password updated!");
           document.getElementById("currentPassword").value = "";
           document.getElementById("newPassword").value = "";
           document.getElementById("confirmPassword").value = "";
         } else {
-          alert(data.message || "Failed to update password");
+          showNotification(data.message || "Failed to update password", "error");
         }
       } catch (err) {
-        alert("Error updating password");
+        showNotification("Error updating password", "error");
       }
     }
 
@@ -571,12 +571,12 @@
         if (res.ok) {
           localStorage.setItem("user", JSON.stringify(data.user));
           document.getElementById("profileAvatarImg").src = data.avatar_url;
-          alert("Avatar updated!");
+          showNotification("Avatar updated!");
         } else {
-          alert(data.message || "Failed to upload avatar");
+          showNotification(data.message || "Failed to upload avatar", "error");
         }
       } catch (err) {
-        alert("Error uploading avatar");
+        showNotification("Error uploading avatar", "error");
       }
     }
 
@@ -789,7 +789,7 @@
         });
 
         if (res.status === 401) {
-          alert("Sesi habis, silakan login kembali");
+          showNotification("Sesi habis, silakan login kembali", "error");
           localStorage.clear();
           window.location.href = "/login";
           return;
@@ -817,7 +817,7 @@
 
         if (res.ok) fetchTasks();
       } catch (err) {
-        alert("Gagal menghapus task");
+        showNotification("Gagal menghapus task", "error");
       }
     }
 
@@ -874,7 +874,7 @@
         tasks[taskIndex].status = originalStatus;
         renderTasks();
         renderStats();
-        alert("Gagal mengupdate status task");
+        showNotification("Gagal mengupdate status task", "error");
       }
     }
 
@@ -1081,7 +1081,7 @@
       const newDeadline = editDeadline.value;
 
       if (!newTitle) {
-        alert("Title tidak boleh kosong.");
+        showNotification("Title tidak boleh kosong.", "error");
         return;
       }
 
@@ -1122,7 +1122,7 @@
         fetchTasks();
 
       } catch (err) {
-        alert("Error: " + err.message);
+        showNotification("Error: " + err.message, "error");
       } finally {
         btnSaveEdit.disabled = false;
         btnSaveEdit.textContent = "Save Changes";

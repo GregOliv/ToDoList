@@ -50,7 +50,7 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'completed' => 'required|boolean',
             'priority' => 'nullable|string|in:low,medium,high',
-            'deadline' => 'nullable|date|after_or_equal:today',
+            'deadline' => 'nullable|date',
             'category_id' => 'nullable|exists:categories,id',
         ]);
 
