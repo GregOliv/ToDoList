@@ -38,7 +38,7 @@
       </button>
 
       <!-- PROFILE (CUSTOMIZATION) -->
-      <button id="profileBtn" onclick="alert('Profile customization coming soon!')"
+      <button id="profileBtn" onclick="openProfileModal()"
         class="flex items-center justify-center p-2 rounded-full hover:bg-white/20 transition-all duration-300"
         title="Customize Profile">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,6 +235,75 @@
           class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">Close</button>
       </div>
     </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profileModal"
+      class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto">
+      <div
+        class="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-lg shadow-2xl transform transition-transform scale-95 data-[state=open]:scale-100">
+
+        <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white border-b pb-2 dark:border-gray-700">Account
+          Profile</h2>
+
+        <div class="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+          <!-- Avatar Section -->
+          <div class="flex flex-col items-center gap-4">
+            <div class="relative group">
+              <img id="profileAvatarImg" src="https://ui-avatars.com/api/?name=User&background=random"
+                class="w-24 h-24 rounded-full object-cover border-4 border-blue-500 shadow-md">
+              <label for="avatarInput"
+                class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </label>
+              <input type="file" id="avatarInput" class="hidden" accept="image/*">
+            </div>
+            <p class="text-xs text-gray-500">Click to change avatar</p>
+          </div>
+
+          <!-- Name & Email -->
+          <div class="grid gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Full Name</label>
+              <input id="profileName"
+                class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Email Address</label>
+              <input id="profileEmail" type="email"
+                class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <button id="btnSaveProfile"
+              class="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-all font-medium shadow-md">Update
+              Profile</button>
+          </div>
+
+          <!-- Password Change -->
+          <div class="pt-6 mt-6 border-t dark:border-gray-700 grid gap-4">
+            <h3 class="font-bold text-gray-800 dark:text-white">Change Password</h3>
+            <input id="currentPassword" type="password" placeholder="Current Password"
+              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+            <input id="newPassword" type="password" placeholder="New Password"
+              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+            <input id="confirmPassword" type="password" placeholder="Confirm New Password"
+              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+            <button id="btnSavePassword"
+              class="w-full border border-blue-600 text-blue-600 py-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all font-medium">Update
+              Password</button>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-6 mt-6 border-t dark:border-gray-700">
+          <button id="btnCloseProfile"
+            class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -396,6 +465,117 @@
       setTimeout(() => {
         categoriesModal.classList.add('hidden');
       }, 300);
+    }
+    /* --- PROFILE MODAL LOGIC --- */
+    const profileModal = document.getElementById("profileModal");
+    function openProfileModal() {
+      // Sync local storage data to form
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      document.getElementById("profileName").value = user.name || "";
+      document.getElementById("profileEmail").value = user.email || "";
+      if (user.avatar) {
+        document.getElementById("profileAvatarImg").src = user.avatar.startsWith('http') ? user.avatar : '/storage/' + user.avatar;
+      }
+
+      profileModal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        profileModal.setAttribute('data-state', 'open');
+      });
+    }
+    function closeProfileModal() {
+      profileModal.setAttribute('data-state', 'closed');
+      setTimeout(() => {
+        profileModal.classList.add('hidden');
+      }, 300);
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById("profileName").value.trim();
+      const email = document.getElementById("profileEmail").value.trim();
+
+      if (!name || !email) return alert("Name and Email are required");
+
+      try {
+        const res = await fetch("/api/profile", {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ name, email })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+          alert("Profile updated!");
+        } else {
+          alert(data.message || "Failed to update profile");
+        }
+      } catch (err) {
+        alert("Error updating profile");
+      }
+    }
+
+    async function savePassword() {
+      const current_password = document.getElementById("currentPassword").value;
+      const password = document.getElementById("newPassword").value;
+      const password_confirmation = document.getElementById("confirmPassword").value;
+
+      if (!current_password || !password) return alert("Both current and new password are required");
+      if (password !== password_confirmation) return alert("Passwords do not match");
+
+      try {
+        const res = await fetch("/api/profile/password", {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ current_password, password, password_confirmation })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert("Password updated!");
+          document.getElementById("currentPassword").value = "";
+          document.getElementById("newPassword").value = "";
+          document.getElementById("confirmPassword").value = "";
+        } else {
+          alert(data.message || "Failed to update password");
+        }
+      } catch (err) {
+        alert("Error updating password");
+      }
+    }
+
+    async function uploadAvatar(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      try {
+        const res = await fetch("/api/profile/avatar", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/json"
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+          document.getElementById("profileAvatarImg").src = data.avatar_url;
+          alert("Avatar updated!");
+        } else {
+          alert(data.message || "Failed to upload avatar");
+        }
+      } catch (err) {
+        alert("Error uploading avatar");
+      }
     }
 
     // =======================================================
@@ -881,11 +1061,18 @@
     window.deleteTask = deleteTask;
     window.openEditModal = openEditModal;
     window.deleteCategory = deleteCategory;
+    window.openProfileModal = openProfileModal;
 
     // Category Management
     document.getElementById("manageCategoriesBtn").onclick = openCategoriesModal;
     document.getElementById("btnCloseCategories").onclick = closeCategoriesModal;
     document.getElementById("btnAddCategory").onclick = addCategory;
+
+    // Profile Management
+    document.getElementById("btnCloseProfile").onclick = closeProfileModal;
+    document.getElementById("btnSaveProfile").onclick = saveProfile;
+    document.getElementById("btnSavePassword").onclick = savePassword;
+    document.getElementById("avatarInput").onchange = uploadAvatar;
 
     /* 🚪 LOGOUT */
     document.getElementById("logoutBtn").onclick = async () => {
