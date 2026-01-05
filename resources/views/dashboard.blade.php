@@ -59,6 +59,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
       </a>
+      <!-- CATEGORIES -->
+      <button id="manageCategoriesBtn"
+        class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full hover:bg-white/20 transition-all font-medium text-sm">
+         Categories
+      </button>
 
 
       <!-- LOGOUT -->
@@ -105,7 +110,7 @@
         placeholder="Search task by title or description...">
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
       <select id="filterPriority"
         class="p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
         <option value="All">All Priority</option>
@@ -119,6 +124,11 @@
         <option value="All">All Status</option>
         <option value="Pending">Pending</option>
         <option value="Completed">Completed</option>
+      </select>
+
+      <select id="filterCategory"
+        class="p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+        <option value="All">All Categories</option>
       </select>
 
       <select id="sortBy"
@@ -160,6 +170,14 @@
             rows="3"></textarea>
         </div>
 
+        <div>
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Category</label>
+          <select id="editCategory"
+            class="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+            <option value="">No Category</option>
+          </select>
+        </div>
+
         <div class="grid grid-cols-2 gap-5">
           <div>
             <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Priority</label>
@@ -184,6 +202,37 @@
         <button id="btnSaveEdit"
           class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg font-medium">Save
           Changes</button>
+      </div>
+    </div>
+  </div>
+  <!-- CATEGORY MODAL -->
+  <div id="categoriesModal"
+    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto">
+    <div
+      class="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-md shadow-2xl transform transition-transform scale-95 data-[state=open]:scale-100">
+
+      <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white border-b pb-2 dark:border-gray-700">Manage
+        Categories</h2>
+
+      <!-- Add Category Form -->
+      <div class="flex gap-2 mb-6">
+        <input id="newCategoryName"
+          class="flex-1 border border-gray-300 dark:border-gray-600 p-2 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+          placeholder="New category name...">
+        <input type="color" id="newCategoryColor" value="#3B82F6"
+          class="w-10 h-10 p-0 border-none rounded bg-transparent cursor-pointer">
+        <button id="btnAddCategory"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all font-medium">+</button>
+      </div>
+
+      <!-- Categories List -->
+      <div id="categoriesList" class="space-y-2 max-h-60 overflow-y-auto mb-6 pr-2">
+        <!-- Injected by JS -->
+      </div>
+
+      <div class="flex justify-end pt-4 border-t dark:border-gray-700">
+        <button id="btnCloseCategories"
+          class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">Close</button>
       </div>
     </div>
   </div>
@@ -233,8 +282,121 @@
 
     /* 📦 STATE MANAGEMENT */
     let tasks = [];
+    let categories = [];
     let editingTaskId = null;
     let myChart = null;
+
+    async function fetchCategories() {
+      try {
+        const res = await fetch("/api/categories", {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/json"
+          }
+        });
+        if (res.ok) {
+          categories = await res.json();
+          populateCategoryFilters();
+        }
+      } catch (err) {
+        console.error("Gagal mengambil kategori:", err);
+      }
+    }
+
+    function populateCategoryFilters() {
+      const filterCat = document.getElementById("filterCategory");
+      const editCat = document.getElementById("editCategory");
+      const listCat = document.getElementById("categoriesList");
+
+      // Clear except first
+      filterCat.innerHTML = '<option value="All">All Categories</option>';
+      editCat.innerHTML = '<option value="">No Category</option>';
+      listCat.innerHTML = '';
+
+      categories.forEach(cat => {
+        const opt = `<option value="${cat.id}">${cat.name}</option>`;
+        filterCat.innerHTML += opt;
+        editCat.innerHTML += opt;
+
+        // Add to management list
+        listCat.innerHTML += `
+          <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full" style="background-color: ${cat.color}"></span>
+              <span class="font-medium">${cat.name}</span>
+            </div>
+            <button onclick="deleteCategory(${cat.id})" class="text-red-500 hover:text-red-700 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+          </div>
+        `;
+      });
+
+      if (categories.length === 0) {
+        listCat.innerHTML = '<p class="text-center text-gray-500 py-4 text-sm">No categories yet.</p>';
+      }
+    }
+
+    async function addCategory() {
+      const nameInput = document.getElementById("newCategoryName");
+      const colorInput = document.getElementById("newCategoryColor");
+      const name = nameInput.value.trim();
+      const color = colorInput.value;
+
+      if (!name) return alert("Category name is required");
+
+      try {
+        const res = await fetch("/api/categories", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ name, color })
+        });
+
+        if (res.ok) {
+          nameInput.value = '';
+          fetchCategories();
+        }
+      } catch (err) {
+        alert("Failed to add category");
+      }
+    }
+
+    async function deleteCategory(id) {
+      if (!confirm("Delete this category? Tasks using this category will be set to 'No Category'.")) return;
+
+      try {
+        const res = await fetch(`/api/categories/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          fetchCategories();
+          fetchTasks(); // Refresh tasks to update badges
+        }
+      } catch (err) {
+        alert("Failed to delete category");
+      }
+    }
+
+    /* --- CATEGORY MODAL LOGIC --- */
+    const categoriesModal = document.getElementById("categoriesModal");
+    function openCategoriesModal() {
+      categoriesModal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        categoriesModal.setAttribute('data-state', 'open');
+      });
+    }
+    function closeCategoriesModal() {
+      categoriesModal.setAttribute('data-state', 'closed');
+      setTimeout(() => {
+        categoriesModal.classList.add('hidden');
+      }, 300);
+    }
 
     // =======================================================
     // 📊 CHART & STATS
@@ -495,7 +657,13 @@
         filtered = filtered.filter(t => Boolean(t.completed) === isComplete);
       }
 
-      // 4. Sort
+      // 4. Filter Category
+      if (document.getElementById("filterCategory").value !== "All") {
+        const catId = document.getElementById("filterCategory").value;
+        filtered = filtered.filter(t => String(t.category_id) === catId);
+      }
+
+      // 5. Sort
       if (sortBy.value === "deadline") {
         filtered.sort((a, b) => {
           const dateA = a.deadline ? new Date(a.deadline) : new Date(8640000000000000);
@@ -528,6 +696,8 @@
         const desc = t.description || "-";
         const deadline = t.deadline || null;
         const isDone = Boolean(t.completed);
+        const categoryName = t.category ? t.category.name : null;
+        const categoryColor = t.category ? t.category.color : '#94a3b8';
 
         // Priority Colors
         let priorityClass = '';
@@ -548,11 +718,19 @@
         const deadlineStatus = formatDeadlineStatus(deadline, isDone);
         const cardOpacity = isDone ? 'opacity-75' : 'opacity-100';
 
+        const categoryTag = categoryName ? `
+          <span style="background-color: ${categoryColor}20; color: ${categoryColor}; border: 1px solid ${categoryColor}40;" 
+                class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm">
+            ${categoryName}
+          </span>
+        ` : '';
+
         taskContainer.innerHTML += `
         <div class="group bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-800 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${cardOpacity}">
           
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-2 flex-wrap">
+                ${categoryTag}
                 <span class="${priorityClass} text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider shadow-sm">
                   ${t.priority || 'NORMAL'}
                 </span>
@@ -604,6 +782,7 @@
       editPriority.value = priorityToSet;
 
       editDeadline.value = task.deadline || '';
+      document.getElementById("editCategory").value = task.category_id || '';
 
       openModal();
     }
@@ -640,6 +819,7 @@
             description: newDescription,
             priority: newPriority.toLowerCase(),
             deadline: newDeadline || null,
+            category_id: document.getElementById("editCategory").value || null,
             completed: Boolean(updatedTask.completed),
           })
         });
@@ -681,6 +861,12 @@
     window.toggleTask = toggleTask;
     window.deleteTask = deleteTask;
     window.openEditModal = openEditModal;
+    window.deleteCategory = deleteCategory;
+
+    // Category Management
+    document.getElementById("manageCategoriesBtn").onclick = openCategoriesModal;
+    document.getElementById("btnCloseCategories").onclick = closeCategoriesModal;
+    document.getElementById("btnAddCategory").onclick = addCategory;
 
     /* 🚪 LOGOUT */
     document.getElementById("logoutBtn").onclick = async () => {
@@ -697,7 +883,11 @@
     };
 
     /* 🚀 START */
+    fetchCategories();
     fetchTasks();
+
+    /* 🔎 ADDITIONAL FILTERS */
+    document.getElementById("filterCategory").onchange = renderTasks;
   </script>
 
 </body>

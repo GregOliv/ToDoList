@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-// app/Models/Task.php
 class Task extends Model
 {
     use HasFactory;
@@ -17,19 +17,36 @@ class Task extends Model
         'completed',
         'user_id',
         'priority',
-        'deadline'
+        'deadline',
+        'category_id'
     ];
-    // Mutator untuk menangani field 'completed' dari frontend
+
+    /**
+     * Relationship to Category.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Relationship to User.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Mutator for 'completed' field.
+     */
     protected function completed(): Attribute
     {
         return Attribute::make(
-            // Mengubah nilai completed (true/false) dari DB status (enum)
-            get: fn ($value, $attributes) => $attributes['status'] === 'completed',
-            
-            // Mengubah nilai completed (true/false) dari request menjadi DB status
+            get: fn($value, $attributes) => isset($attributes['status']) && $attributes['status'] === 'completed',
             set: function ($value) {
                 $newStatus = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'completed' : 'pending';
-                
+
                 return [
                     'status' => $newStatus,
                     'finished_at' => ($newStatus === 'completed') ? now() : null,

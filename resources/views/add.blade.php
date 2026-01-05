@@ -43,6 +43,10 @@
       <label class="block mb-2 font-semibold">Description</label>
       <textarea id="description" class="w-full border p-2 rounded mb-4 dark:bg-gray-700 dark:border-gray-600"
         placeholder="Deskripsi (opsional)"></textarea>
+      <label class="block mb-2 font-semibold">Category</label>
+      <select id="category" class="w-full border p-2 rounded mb-4 dark:bg-gray-700 dark:border-gray-600">
+        <option value="">No Category</option>
+      </select>
 
       <label class="block mb-2 font-semibold">Priority</label>
       <select id="priority" class="w-full border p-2 rounded mb-4 dark:bg-gray-700 dark:border-gray-600">
@@ -82,6 +86,31 @@
       document.documentElement.classList.add("dark");
     }
 
+    /* 📦 FETCH CATEGORIES */
+    async function fetchCategories() {
+      try {
+        const res = await fetch("/api/categories", {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/json"
+          }
+        });
+        if (res.ok) {
+          const categories = await res.json();
+          const catSelect = document.getElementById("category");
+          categories.forEach(cat => {
+            const opt = document.createElement("option");
+            opt.value = cat.id;
+            opt.textContent = cat.name;
+            catSelect.appendChild(opt);
+          });
+        }
+      } catch (err) {
+        console.error("Gagal mengambil kategori:", err);
+      }
+    }
+    fetchCategories();
+
     /* 📡 ADD TASK VIA API */
     document.getElementById("addBtn").onclick = async () => {
       const title = document.getElementById("title").value.trim();
@@ -119,8 +148,9 @@
           body: JSON.stringify({
             title: title,
             description: desc,
-            priority: priority, // Pastikan field 'priority' ada di $fillable Model Task
-            deadline: deadline  // Pastikan field 'deadline' ada di $fillable Model Task
+            priority: priority,
+            deadline: deadline,
+            category_id: document.getElementById("category").value || null
           })
         });
 

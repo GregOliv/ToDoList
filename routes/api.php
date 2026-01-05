@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes (No Authentication Needed)
@@ -20,4 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Note: Pada Laravel 11, binding otomatis menggunakan {task}
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+
+    // Category Resources
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 });

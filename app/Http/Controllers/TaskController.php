@@ -13,7 +13,7 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         // Ambil semua tugas yang user_id-nya sesuai dengan ID user yang sedang login
-        $tasks = $request->user()->tasks()->orderBy('id', 'desc')->get();
+        $tasks = $request->user()->tasks()->with('category')->orderBy('id', 'desc')->get();
         return response()->json($tasks);
     }
 
@@ -27,6 +27,7 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'priority' => 'nullable|string|in:low,medium,high',
             'deadline' => 'nullable|date',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
         $task = $request->user()->tasks()->create($validated);
@@ -50,6 +51,7 @@ class TaskController extends Controller
             'completed' => 'required|boolean',
             'priority' => 'nullable|string|in:low,medium,high',
             'deadline' => 'nullable|date',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
         $task->update($validated);
