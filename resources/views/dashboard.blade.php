@@ -19,7 +19,6 @@
   <header
     class="bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 text-white py-4 px-6 flex justify-between items-center shadow-lg sticky top-0 z-50">
     <div class="flex items-center gap-2">
-      <span class="text-2xl">✅</span>
       <h1 class="text-2xl font-bold tracking-tight">My Tasks</h1>
     </div>
 
@@ -235,73 +234,73 @@
           class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">Close</button>
       </div>
     </div>
+  </div>
 
-    <!-- PROFILE MODAL -->
-    <div id="profileModal"
-      class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto">
-      <div
-        class="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-lg shadow-2xl transform transition-transform scale-95 data-[state=open]:scale-100">
+  <!-- PROFILE MODAL -->
+  <div id="profileModal"
+    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto">
+    <div
+      class="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full max-w-lg shadow-2xl transform transition-transform scale-95 data-[state=open]:scale-100">
 
-        <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white border-b pb-2 dark:border-gray-700">Account
-          Profile</h2>
+      <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white border-b pb-2 dark:border-gray-700">Account
+        Profile</h2>
 
-        <div class="space-y-6 max-h-[70vh] overflow-y-auto px-1">
-          <!-- Avatar Section -->
-          <div class="flex flex-col items-center gap-4">
-            <div class="relative group">
-              <img id="profileAvatarImg" src="https://ui-avatars.com/api/?name=User&background=random"
-                class="w-24 h-24 rounded-full object-cover border-4 border-blue-500 shadow-md">
-              <label for="avatarInput"
-                class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </label>
-              <input type="file" id="avatarInput" class="hidden" accept="image/*">
-            </div>
-            <p class="text-xs text-gray-500">Click to change avatar</p>
+      <div class="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+        <!-- Avatar Section -->
+        <div class="flex flex-col items-center gap-4">
+          <div class="relative group">
+            <img id="profileAvatarImg" src="https://ui-avatars.com/api/?name=User&background=random"
+              class="w-24 h-24 rounded-full object-cover border-4 border-blue-500 shadow-md">
+            <label for="avatarInput"
+              class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </label>
+            <input type="file" id="avatarInput" class="hidden" accept="image/*">
           </div>
-
-          <!-- Name & Email -->
-          <div class="grid gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Full Name</label>
-              <input id="profileName"
-                class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Email Address</label>
-              <input id="profileEmail" type="email"
-                class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <button id="btnSaveProfile"
-              class="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-all font-medium shadow-md">Update
-              Profile</button>
-          </div>
-
-          <!-- Password Change -->
-          <div class="pt-6 mt-6 border-t dark:border-gray-700 grid gap-4">
-            <h3 class="font-bold text-gray-800 dark:text-white">Change Password</h3>
-            <input id="currentPassword" type="password" placeholder="Current Password"
-              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
-            <input id="newPassword" type="password" placeholder="New Password"
-              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
-            <input id="confirmPassword" type="password" placeholder="Confirm New Password"
-              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
-            <button id="btnSavePassword"
-              class="w-full border border-blue-600 text-blue-600 py-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all font-medium">Update
-              Password</button>
-          </div>
+          <p class="text-xs text-gray-500">Click to change avatar</p>
         </div>
 
-        <div class="flex justify-end pt-6 mt-6 border-t dark:border-gray-700">
-          <button id="btnCloseProfile"
-            class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">Close</button>
+        <!-- Name & Email -->
+        <div class="grid gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Full Name</label>
+            <input id="profileName"
+              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Email Address</label>
+            <input id="profileEmail" type="email"
+              class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <button id="btnSaveProfile"
+            class="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-all font-medium shadow-md">Update
+            Profile</button>
         </div>
+
+        <!-- Password Change -->
+        <div class="pt-6 mt-6 border-t dark:border-gray-700 grid gap-4">
+          <h3 class="font-bold text-gray-800 dark:text-white">Change Password</h3>
+          <input id="currentPassword" type="password" placeholder="Current Password"
+            class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+          <input id="newPassword" type="password" placeholder="New Password"
+            class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+          <input id="confirmPassword" type="password" placeholder="Confirm New Password"
+            class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none">
+          <button id="btnSavePassword"
+            class="w-full border border-blue-600 text-blue-600 py-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all font-medium">Update
+            Password</button>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-6 mt-6 border-t dark:border-gray-700">
+        <button id="btnCloseProfile"
+          class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">Close</button>
       </div>
     </div>
   </div>
