@@ -73,6 +73,9 @@
     </div>
   </header>
 
+  <!-- NOTIFICATION CONTAINER -->
+  <div id="notificationStack" class="fixed top-20 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
   <!-- STATS & CHART SECTION -->
   <section class="p-6 max-w-4xl mx-auto mt-6">
     <div
@@ -577,12 +580,63 @@
       }
     }
 
+    function showNotification(message, type = 'success') {
+      const stack = document.getElementById("notificationStack");
+      const id = Date.now();
+      const colorClass = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+      const icon = type === 'error' ? '❌' : '✅';
+
+      const toast = document.createElement("div");
+      toast.id = `toast-${id}`;
+      toast.className = `${colorClass} text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right duration-300 pointer-events-auto cursor-pointer`;
+      toast.innerHTML = `
+        <span class="text-lg">${icon}</span>
+        <span class="font-medium">${message}</span>
+      `;
+      toast.onclick = () => {
+        toast.classList.add('animate-out', 'fade-out', 'slide-out-to-right');
+        setTimeout(() => toast.remove(), 300);
+      };
+
+      stack.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentElement) toast.onclick();
+      }, 5000);
+    }
+
+    async function requestNotificationPermission() {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "default") {
+        await Notification.requestPermission();
+      }
+    }
+
+    function sendBrowserNotification(title, body) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        new Notification(title, {
+          body: body,
+          icon: '/favicon.ico' // Ensure favicon exists or use a generic icon URL
+        });
+      }
+    }
+
     // =======================================================
     // 📊 CHART & STATS
     // =======================================================
     function renderStats() {
-      const completedCount = tasks.filter(t => t.completed).length;
-      const pendingCount = tasks.length - completedCount;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const completedCount = tasks.filter(t => Boolean(t.completed || t.status === 'completed')).length;
+      const overdueCount = tasks.filter(t => {
+        const isDone = Boolean(t.completed || t.status === 'completed');
+        if (isDone || !t.deadline) return false;
+        const d = new Date(t.deadline);
+        d.setHours(0, 0, 0, 0);
+        return d < today;
+      }).length;
+      const pendingCount = tasks.length - completedCount - overdueCount;
       const totalCount = tasks.length;
 
       // 1. Update Tally Text
@@ -597,6 +651,11 @@
                 <span class="text-3xl font-bold text-green-500 group-hover:scale-110 transition-transform">${completedCount}</span>
                 <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold mt-1">Done</span>
             </div>
+            <div class="w-px bg-gray-200 dark:bg-gray-700 h-12 mx-2"></div>
+            <div class="flex flex-col items-center group">
+                <span class="text-3xl font-bold text-red-500 group-hover:scale-110 transition-transform">${overdueCount}</span>
+                <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold mt-1">Overdue</span>
+            </div>
              <div class="w-px bg-gray-200 dark:bg-gray-700 h-12 mx-2"></div>
             <div class="flex flex-col items-center group">
                 <span class="text-3xl font-bold text-blue-500 group-hover:scale-110 transition-transform">${pendingCount}</span>
@@ -604,13 +663,20 @@
             </div>
         `;
 
+      // Reminder Notification
+      if (overdueCount > 0 && !window.overdueAlertShown) {
+        showNotification(`You have ${overdueCount} overdue tasks!`, 'error');
+        sendBrowserNotification("Task Reminder", `You have ${overdueCount} tasks that are overdue. Please check your dashboard!`);
+        window.overdueAlertShown = true;
+      }
+
       // 2. Update/Init Chart
       const ctx = document.getElementById('taskChart').getContext('2d');
       const isDark = document.documentElement.classList.contains("dark");
       const textColor = isDark ? '#e5e7eb' : '#374151';
 
       if (myChart) {
-        myChart.data.datasets[0].data = [completedCount, pendingCount];
+        myChart.data.datasets[0].data = [completedCount, overdueCount, pendingCount];
         // Ensure colors are correct (sometimes lost if config mutates deeply)
         updateChartTheme();
         myChart.update();
@@ -618,15 +684,17 @@
         myChart = new Chart(ctx, {
           type: 'doughnut',
           data: {
-            labels: ['Completed', 'Pending'],
+            labels: ['Completed', 'Overdue', 'Pending'],
             datasets: [{
-              data: [completedCount, pendingCount],
+              data: [completedCount, overdueCount, pendingCount],
               backgroundColor: [
                 '#10B981', // Emerald 500
+                '#EF4444', // Red 500
                 '#3B82F6'  // Blue 500
               ],
               hoverBackgroundColor: [
                 '#059669',
+                '#DC2626',
                 '#2563EB'
               ],
               borderWidth: 0,
@@ -682,23 +750,32 @@
       if (isCompleted) {
         return { text: 'Completed', class: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' };
       }
+    }
 
-      const deadlineDate = new Date(deadline);
-      deadlineDate.setHours(0, 0, 0, 0);
+    // Initialize deadline min dates
+    function initDeadlineConstraints() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const editDeadlineInput = document.getElementById("editDeadline");
+      if (editDeadlineInput) editDeadlineInput.min = todayStr;
+    }
+    initDeadlineConstraints();
 
-      const diffTime = deadlineDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const deadlineDate = new Date(deadline);
+    deadlineDate.setHours(0, 0, 0, 0);
 
-      if (diffDays < 0) {
-        const daysOverdue = Math.abs(diffDays);
-        return { text: `Overdue ${daysOverdue}d`, class: 'bg-red-500 text-white shadow-md shadow-red-500/30' };
-      } else if (diffDays === 0) {
-        return { text: 'Due Today', class: 'bg-amber-500 text-white shadow-md shadow-amber-500/30' };
-      } else if (diffDays <= 3) {
-        return { text: `${diffDays} days left`, class: 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200' };
-      } else {
-        return { text: `${diffDays} days left`, class: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200' };
-      }
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      const daysOverdue = Math.abs(diffDays);
+      return { text: `Overdue ${daysOverdue}d`, class: 'bg-red-500 text-white shadow-md shadow-red-500/30' };
+    } else if (diffDays === 0) {
+      return { text: 'Due Today', class: 'bg-amber-500 text-white shadow-md shadow-amber-500/30' };
+    } else if (diffDays <= 3) {
+      return { text: `${diffDays} days left`, class: 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200' };
+    } else {
+      return { text: `${diffDays} days left`, class: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200' };
+    }
     }
 
     /* 📡 API CALLS */
@@ -941,6 +1018,14 @@
               ${t.title}
             </h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${desc}</p>
+            ${deadline ? `
+              <div class="mt-2 flex items-center gap-2 text-xs font-semibold ${isDone ? 'text-gray-400' : 'text-blue-600 dark:text-blue-400'}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>${new Date(deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+              </div>
+            ` : ''}
           </div>
 
           <div class="flex items-center gap-2 self-end sm:self-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -1088,6 +1173,7 @@
     };
 
     /* 🚀 START */
+    requestNotificationPermission();
     fetchCategories();
     fetchTasks();
 

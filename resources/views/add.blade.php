@@ -86,6 +86,9 @@
       document.documentElement.classList.add("dark");
     }
 
+    // Set minimum deadline date to today
+    document.getElementById("deadline").min = new Date().toISOString().split('T')[0];
+
     /* 📦 FETCH CATEGORIES */
     async function fetchCategories() {
       try {
